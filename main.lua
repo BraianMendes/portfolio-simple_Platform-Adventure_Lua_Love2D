@@ -1,57 +1,70 @@
 _G.love = require("love")
 
 function love.load()
-    love.graphics.setBackgroundColor(0.5, 0.5, 1)
-
-    _G.pacman = {}
-    pacman.x = 200
-    pacman.y = 250
-    pacman.eat = true
-    pacman.angle1 = 1
-    pacman.angle2 = 5
-
-    _G.food ={
-        x = 600,
-        eaten = false
+    jack = {
+        x = 0,
+        y = 0,
+        sprite = love.graphics.newImage("sprites/spritesheet.png"),
+        animation = {
+            direction = "right",
+            idle = true,
+            frame = 1,
+            max_frames = 8,
+            speed = 20,
+            timer = 0.1
+        }
     }
+
+    -- 5352x569
+    SPRITE_WIDTH, SPRITE_HEIGHT = 5352, 569
+    QUAD_WIDTH, QUAD_HEIGHT = 669, SPRITE_HEIGHT
+
+    quads = {}
+    for i = 1, 8 do
+        quads[i] = love.graphics.newQuad(QUAD_WIDTH * (i - 1), 0, QUAD_WIDTH, QUAD_HEIGHT, SPRITE_WIDTH, SPRITE_HEIGHT)
+    end
 end
 
 function love.update(dt)
-    -- Move on X and Y
-    if love.keyboard.isDown("a") then
-        pacman.x = pacman.x - 1
-    end
     if love.keyboard.isDown("d") then
-        pacman.x = pacman.x + 1
-    end
-    if love.keyboard.isDown("w") then
-        pacman.y = pacman.y - 1
-    end
-    if love.keyboard.isDown("s") then
-        pacman.y = pacman.y + 1
-    end
-
-    -- Rotate
-    if love.keyboard.isDown("e") then
-        pacman.angle1 = pacman.angle1 + math.pi * dt
-        pacman.angle2 = pacman.angle2 + math.pi * dt
-    end
-    if love.keyboard.isDown("q") then
-        pacman.angle1 = pacman.angle1 - math.pi * dt
-        pacman.angle2 = pacman.angle2 - math.pi * dt
+        jack.animation.idle = false
+        jack.animation.direction = "right"
+    elseif love.keyboard.isDown("a") then
+        jack.animation.idle = false
+        jack.animation.direction = "left"
+    else
+        jack.animation.idle = true
+        jack.animation.frame = 1
     end
 
-    if pacman.x >= food.x + 20 then
-        food.eaten = true
+    if not jack.animation.idle then
+        jack.animation.timer = jack.animation.timer + dt
+
+        if jack.animation.timer > 0.2 then
+            jack.animation.timer = 0.1
+
+            jack.animation.frame = jack.animation.frame + 1
+
+            if jack.animation.direction == "right" then
+                jack.x = jack.x + jack.animation.speed
+            else
+                jack.x = jack.x - jack.animation.speed
+            end
+
+            if jack.animation.frame > jack.animation.max_frames then
+                jack.animation.frame = 1
+            end
+        end
     end
 end
 
 function love.draw()
-    if not food.eaten then
-        love.graphics.setColor(0, 0, 0)
-        love.graphics.rectangle("fill", food.x, 200, 70, 70)
+    love.graphics.scale(0.3)
+
+    if jack.animation.direction == "right" then
+        love.graphics.draw(jack.sprite, quads[jack.animation.frame], jack.x, jack.y)
+    else
+        love.graphics.draw(jack.sprite, quads[jack.animation.frame], jack.x, jack.y, 0, -1, 1, QUAD_WIDTH, 0)
     end
 
-    love.graphics.setColor(1, 0.7, 0.1)
-    love.graphics.arc("fill", pacman.x, pacman.y, 60, pacman.angle1, pacman.angle2)
 end
